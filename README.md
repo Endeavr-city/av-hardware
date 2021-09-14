@@ -1,2 +1,2 @@
 # av-hardware-cad
-CAD files for Enderavr AV hardware
+CAD files for Endeavr AV hardware
