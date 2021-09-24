@@ -12,7 +12,7 @@
 const uint8_t crc_poly = 0xD5;
 uint8_t pkt_idx = 0;
 // MASTER_NODE sets the "clock"
-#define MASTER_NODE
+// #define MASTER_NODE
 // Serial debugging
 #define SERIAL_DEBUG
 
@@ -54,7 +54,7 @@ void setup() {
   CAN.filter(CAN_INPUT);
   Serial.println("SETUP COMPLETE");
 
-#ifdef MASTER_NODE
+//#ifdef MASTER_NODE
   // TIMER 1 for interrupt frequency 20 Hz:
   cli(); // stop interrupts
   TCCR1A = 0; // set entire TCCR1A register to 0
@@ -69,9 +69,9 @@ void setup() {
   // enable timer compare interrupt
   TIMSK1 |= (1 << OCIE1A);
   sei(); // allow interrupts
-#else
+//#else
   CAN.onReceive(CAN_RX_IRQHandler);
-#endif
+//#endif
 
   // TIMER 2 for interrupt frequency 1000 Hz:
   cli(); // stop interrupts
@@ -142,9 +142,10 @@ void CAN_RX_IRQHandler(int packetSize) {
   // TODO: do a checksum and enable check
   uint8_t cksum = can_buf[7];
   if (1) {
-    bool enable = (can_buf[2] >> 7);
-    if (enable) {
+    //bool enable = (can_buf[2] >> 7);
+    if (1) {
       pwm_value = ((can_buf[0] << 8) | can_buf[1]) / 170;
+      set_hbridge(1);
     } else {
       pwm_value = 0;
     }
@@ -164,8 +165,8 @@ void actuator() {
   if (state == NO_ERROR){
     // clip to +- 48
     // set_hbridge(1);
-    analogWrite(5, (128 - pwm_value));
-    analogWrite(6, (128 + pwm_value));
+    analogWrite(5, (128 + pwm_value));
+    analogWrite(6, (128 - pwm_value));
   } else {
     // error handling
     pwm_value = 0;
@@ -174,6 +175,8 @@ void actuator() {
 
   if (timeout >= TIMEOUT_MAX){
     state = TIMEOUT;
+    pwm_value = 0;
+    set_hbridge(0);
   }
   
   Serial.print("STATE: ");
@@ -188,7 +191,7 @@ void actuator() {
 // 50Hz timer interrupt (master node)
 ISR(TIMER1_COMPA_vect) {
   //cli();
-  send_can();
+  // send_can();
   //sei();
   // up timeout counter
   if (timeout <= TIMEOUT_MAX){
